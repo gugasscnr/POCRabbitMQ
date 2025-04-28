@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da POC RabbitMQ em Python</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            border-left: 4px solid #3498db;
+        }
+        .note {
+            background-color: #f0f7fb;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .architecture-diagram {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Documentação da POC RabbitMQ em Python</h1>
+
+    <p>Esta documentação descreve a implementação em Python da Prova de Conceito (POC) de RabbitMQ, demonstrando o uso de diferentes tipos de exchanges (Direct, Fanout, Topic) e filas.</p>
+
+    <h2>Índice</h2>
+    <ol>
+        <li><a href="#introducao">Introdução</a></li>
+        <li><a href="#arquitetura">Arquitetura</a>
+            <ul>
+                <li><a href="#arquitetura-visao">Visão Geral</a></li>
+                <li><a href="#arquitetura-componentes">Componentes</a></li>
+                <li><a href="#arquitetura-classes">Classes Principais</a></li>
+            </ul>
+        </li>
+        <li><a href="#melhores-praticas">Melhores Práticas Implementadas</a></li>
+        <li><a href="#configuracao">Configuração e Instalação</a></li>
+        <li><a href="#uso">Como Utilizar</a></li>
+        <li><a href="#exchanges">Tipos de Exchanges</a></li>
+        <li><a href="#logging">Sistema de Logging</a></li>
+        <li><a href="#tratamento-erros">Tratamento de Erros</a></li>
+        <li><a href="#comparacao">Comparação com Implementação Java</a></li>
+    </ol>
+
+    <h2 id="introducao">1. Introdução</h2>
+    <p>O RabbitMQ é um servidor de mensageria de código aberto que implementa o protocolo AMQP (Advanced Message Queuing Protocol). Este projeto demonstra a utilização do RabbitMQ em Python usando a biblioteca Pika, que é o cliente oficial Python para RabbitMQ.</p>
+
+    <p>A implementação permite:</p>
+    <ul>
+        <li>Configurar diferentes tipos de exchanges (Direct, Fanout, Topic)</li>
+        <li>Criar filas e vinculá-las aos exchanges com routing keys específicas</li>
+        <li>Enviar mensagens para os diferentes exchanges</li>
+        <li>Consumir mensagens das filas com diferentes consumidores</li>
+    </ul>
+
+    <h2 id="arquitetura">2. Arquitetura</h2>
+
+    <h3 id="arquitetura-visao">2.1. Visão Geral</h3>
+    <p>A arquitetura segue princípios de programação orientada a objetos e padrões de design para garantir uma implementação modular, extensível e robusta. A implementação utiliza uma classe base abstrata para definir comportamentos comuns e especializações para as funcionalidades específicas.</p>
+
+    <div class="note">
+        <strong>Arquitetura em Camadas:</strong>
+        <ul>
+            <li>Camada de Configuração: Parâmetros e constantes</li>
+            <li>Camada de Cliente Base: Implementação de funcionalidades comuns</li>
+            <li>Camada de Produtor: Envio de mensagens</li>
+            <li>Camada de Consumidor: Recebimento e processamento de mensagens</li>
+            <li>Camada de Aplicação: Orquestração e interação com o usuário</li>
+        </ul>
+    </div>
+
+    <h3 id="arquitetura-componentes">2.2. Componentes</h3>
+    <p>A aplicação é composta pelos seguintes componentes principais:</p>
+
+    <table>
+        <tr>
+            <th>Componente</th>
+            <th>Arquivo</th>
+            <th>Descrição</th>
+        </tr>
+        <tr>
+            <td>Configuração</td>
+            <td><code>config.py</code></td>
+            <td>Contém constantes e parâmetros de configuração</td>
+        </tr>
+        <tr>
+            <td>Cliente Base</td>
+            <td><code>rabbitmq_client.py</code></td>
+            <td>Classe abstrata que define a interface comum e implementa funcionalidades compartilhadas</td>
+        </tr>
+        <tr>
+            <td>Produtor</td>
+            <td><code>producer.py</code></td>
+            <td>Implementação do produtor para envio de mensagens</td>
+        </tr>
+        <tr>
+            <td>Consumidor</td>
+            <td><code>consumer.py</code></td>
+            <td>Implementação do consumidor para recebimento de mensagens</td>
+        </tr>
+        <tr>
+            <td>Aplicação</td>
+            <td><code>app.py</code></td>
+            <td>Aplicação principal que coordena os componentes e provê interface interativa</td>
+        </tr>
+    </table>
+
+    <h3 id="arquitetura-classes">2.3. Classes Principais</h3>
+
+    <h4>2.3.1. RabbitMQClient (Classe Abstrata Base)</h4>
+    <p>Define a interface comum e implementa funcionalidades compartilhadas entre produtor e consumidor.</p>
+    <pre><code>class RabbitMQClient(ABC):
+    # Métodos compartilhados para gerenciar conexões e canais
+    # Operações comuns como declaração de exchanges e filas
+    # Context managers para operações com o canal
+    # Método abstrato run() que deve ser implementado pelas subclasses</code></pre>
+
+    <h4>2.3.2. MessageProducer</h4>
+    <p>Especialização para envio de mensagens para os exchanges.</p>
+    <pre><code>class MessageProducer(RabbitMQClient):
+    # Métodos específicos para declarar diferentes tipos de exchanges
+    # Método para enviar mensagens para exchanges com routing keys
+    # Implementação do método run() da classe abstrata</code></pre>
+
+    <h4>2.3.3. MessageConsumer</h4>
+    <p>Especialização para recebimento e processamento de mensagens das filas.</p>
+    <pre><code>class MessageConsumer(RabbitMQClient):
+    # Métodos para iniciar consumo de mensagens das filas
+    # Callbacks para processamento de mensagens recebidas
+    # Gerenciamento de múltiplos consumidores
+    # Implementação do método run() da classe abstrata</code></pre>
+
+    <h2 id="melhores-praticas">3. Melhores Práticas Implementadas</h2>
+    
+    <p>Esta implementação segue várias melhores práticas de desenvolvimento em Python:</p>
+    
+    <table>
+        <tr>
+            <th>Prática</th>
+            <th>Descrição</th>
+            <th>Implementação</th>
+        </tr>
+        <tr>
+            <td>Context Managers</td>
+            <td>Uso de <code>with</code> statements para gerenciamento de recursos</td>
+            <td>Implementação de <code>channel_operation()</code> e <code>rabbitmq_connection()</code></td>
+        </tr>
+        <tr>
+            <td>Logging Estruturado</td>
+            <td>Sistema de logging em vez de prints para depuração e monitoramento</td>
+            <td>Uso do módulo <code>logging</code> em todas as classes</td>
+        </tr>
+        <tr>
+            <td>Classes Abstratas</td>
+            <td>Uso de ABC (Abstract Base Classes) para definir interfaces comuns</td>
+            <td>Implementação da classe <code>RabbitMQClient</code></td>
+        </tr>
+        <tr>
+            <td>Tratamento de Exceções</td>
+            <td>Tratamento robusto de exceções em todos os níveis</td>
+            <td>Blocos try/except específicos para cada tipo de operação</td>
+        </tr>
+        <tr>
+            <td>Documentação de Código</td>
+            <td>Docstrings completas e tipos de argumentos</td>
+            <td>Documentação de todas as classes, métodos e parâmetros</td>
+        </tr>
+        <tr>
+            <td>Modularidade</td>
+            <td>Código organizado em módulos com responsabilidades específicas</td>
+            <td>Separação em arquivos específicos para cada componente</td>
+        </tr>
+        <tr>
+            <td>Multi-threading</td>
+            <td>Uso apropriado de threads para operações concorrentes</td>
+            <td>Thread dedicada para processamento de eventos de consumo</td>
+        </tr>
+        <tr>
+            <td>Clean Code</td>
+            <td>Código limpo, legível e bem estruturado</td>
+            <td>Nomes significativos, funções pequenas e coesas</td>
+        </tr>
+    </table>
+
+    <h2 id="configuracao">4. Configuração e Instalação</h2>
+
+    <h3>4.1. Requisitos</h3>
+    <ul>
+        <li>Python 3.6+</li>
+        <li>RabbitMQ Server em execução (localhost:5672)</li>
+        <li>Biblioteca Pika</li>
+    </ul>
+
+    <h3>4.2. Instalação</h3>
+    <ol>
+        <li>Certifique-se de que o RabbitMQ está em execução no seu ambiente.</li>
+        <li>Crie e ative um ambiente virtual:
+            <pre><code>python -m venv venv
+# No Windows:
+.\venv\Scripts\activate  # ou .\venv\bin\activate em alguns ambientes
+# No Linux/Mac:
+source venv/bin/activate</code></pre>
+        </li>
+        <li>Instale as dependências necessárias:
+            <pre><code>pip install -r requirements.txt</code></pre>
+        </li>
+    </ol>
+
+    <h2 id="uso">5. Como Utilizar</h2>
+
+    <h3>5.1. Executando a Aplicação</h3>
+    <p>Para iniciar a aplicação, execute o arquivo principal:</p>
+    <pre><code>python app.py</code></pre>
+
+    <p>A aplicação realizará as seguintes etapas:</p>
+    <ol>
+        <li>Conectar ao servidor RabbitMQ</li>
+        <li>Configurar exchanges (Direct, Fanout, Topic) e filas</li>
+        <li>Iniciar consumidores para cada fila</li>
+        <li>Apresentar um menu interativo para envio de mensagens</li>
+    </ol>
+
+    <h3>5.2. Interface Interativa</h3>
+    <p>O menu interativo oferece as seguintes opções:</p>
+    <pre><code>Select exchange type to send message:
+1. Direct Exchange
+2. Fanout Exchange
+3. Topic Exchange
+0. Exit</code></pre>
+
+    <p>Dependendo da escolha, você será solicitado a fornecer informações adicionais:</p>
+    <ul>
+        <li><strong>Direct Exchange:</strong> Escolha uma routing key e digite a mensagem</li>
+        <li><strong>Fanout Exchange:</strong> Digite apenas a mensagem (routing key é ignorada)</li>
+        <li><strong>Topic Exchange:</strong> Digite uma routing key específica de tópico e a mensagem</li>
+    </ul>
+
+    <h2 id="exchanges">6. Tipos de Exchanges</h2>
+
+    <h3>6.1. Direct Exchange</h3>
+    <p>As mensagens são roteadas para filas com base em uma combinação exata da routing key.</p>
+    <ul>
+        <li>Nome do exchange: <code>poc.direct.exchange</code></li>
+        <li>Routing keys:
+            <ul>
+                <li><code>poc.key.one</code> (para fila 1)</li>
+                <li><code>poc.key.two</code> (para fila 2)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="note">
+        <p><strong>Exemplo:</strong> Uma mensagem enviada para o exchange <code>poc.direct.exchange</code> com routing key <code>poc.key.one</code> será entregue apenas à fila <code>poc.queue.one</code>.</p>
+    </div>
+
+    <h3>6.2. Fanout Exchange</h3>
+    <p>As mensagens são enviadas para todas as filas vinculadas ao exchange, ignorando a routing key.</p>
+    <ul>
+        <li>Nome do exchange: <code>poc.fanout.exchange</code></li>
+        <li>Filas vinculadas: <code>poc.queue.one</code> e <code>poc.queue.two</code></li>
+    </ul>
+
+    <div class="note">
+        <p><strong>Exemplo:</strong> Uma mensagem enviada para o exchange <code>poc.fanout.exchange</code> será entregue tanto à fila <code>poc.queue.one</code> quanto à fila <code>poc.queue.two</code>, independentemente da routing key utilizada.</p>
+    </div>
+
+    <h3>6.3. Topic Exchange</h3>
+    <p>As mensagens são roteadas para filas com base em padrões de routing key, permitindo correspondências parciais e curinga.</p>
+    <ul>
+        <li>Nome do exchange: <code>poc.topic.exchange</code></li>
+        <li>Padrão de binding: <code>poc.topic.#</code> (para fila 3)</li>
+    </ul>
+
+    <div class="note">
+        <p><strong>Exemplo:</strong> Uma mensagem enviada para o exchange <code>poc.topic.exchange</code> com routing key <code>poc.topic.example</code> ou <code>poc.topic.test.something</code> será entregue à fila <code>poc.queue.three</code>.</p>
+        <p>O caractere <code>#</code> corresponde a zero ou mais palavras separadas por ponto, enquanto <code>*</code> corresponde a exatamente uma palavra.</p>
+    </div>
+
+    <h2 id="logging">7. Sistema de Logging</h2>
+    
+    <p>A aplicação implementa um sistema de logging estruturado utilizando o módulo <code>logging</code> do Python, o que permite rastrear eventos, erros e informações de execução de forma detalhada.</p>
+
+    <h3>7.1. Configuração do Logger</h3>
+    <pre><code>logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)</code></pre>
+
+    <h3>7.2. Níveis de Log Utilizados</h3>
+    <ul>
+        <li><code>INFO</code>: Operações normais e eventos (conexões, declarações, envio/recebimento de mensagens)</li>
+        <li><code>WARNING</code>: Situações potencialmente problemáticas que não impedem a execução</li>
+        <li><code>ERROR</code>: Erros que afetam a execução mas permitem recuperação</li>
+    </ul>
+
+    <div class="note">
+        <p>Para habilitar logs mais detalhados, você pode alterar o nível para <code>logging.DEBUG</code> na configuração do logger.</p>
+    </div>
+
+    <h2 id="tratamento-erros">8. Tratamento de Erros</h2>
+    
+    <p>A implementação possui tratamento robusto de erros em vários níveis:</p>
+
+    <h3>8.1. Exceções Específicas do RabbitMQ</h3>
+    <ul>
+        <li><code>pika.exceptions.AMQPConnectionError</code>: Erros de conexão com o servidor</li>
+        <li><code>pika.exceptions.AMQPChannelError</code>: Erros no canal de comunicação</li>
+    </ul>
+
+    <h3>8.2. Estratégias de Recuperação</h3>
+    <p>Em caso de falhas, as seguintes estratégias são utilizadas:</p>
+    <ul>
+        <li>Reconexão automática em caso de falha de conexão</li>
+        <li>Recriação de canais em caso de erros de canal</li>
+        <li>Redelivery de mensagens não processadas corretamente (via nack)</li>
+    </ul>
+
+    <h3>8.3. Context Managers</h3>
+    <p>O uso de context managers (<code>with</code> statements) garante que recursos sejam liberados adequadamente mesmo em caso de exceções:</p>
+    <pre><code>@contextmanager
+def channel_operation(self):
+    try:
+        yield self.channel
+    except pika.exceptions.AMQPChannelError as e:
+        logger.error(f"Channel error: {e}")
+        self._initialize_channel()  # Try to recover
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in channel operation: {e}")
+        raise</code></pre>
+
+    <h2 id="comparacao">9. Comparação com Implementação Java</h2>
+
+    <p>Esta implementação Python mantém os mesmos conceitos e funcionalidades da versão Java original, porém com algumas diferenças que refletem as melhores práticas de cada linguagem:</p>
+
+    <table>
+        <tr>
+            <th>Aspecto</th>
+            <th>Implementação Java</th>
+            <th>Implementação Python</th>
+        </tr>
+        <tr>
+            <td>Bibliotecas</td>
+            <td>Cliente Java oficial do RabbitMQ</td>
+            <td>Pika (cliente Python oficial)</td>
+        </tr>
+        <tr>
+            <td>Estilo de Código</td>
+            <td>camelCase para métodos e variáveis</td>
+            <td>snake_case para métodos e variáveis</td>
+        </tr>
+        <tr>
+            <td>Gerenciamento de Recursos</td>
+            <td>try-catch-finally</td>
+            <td>Context managers (with statements)</td>
+        </tr>
+        <tr>
+            <td>Concorrência</td>
+            <td>Implícita no modelo do cliente Java</td>
+            <td>Explícita com threading</td>
+        </tr>
+        <tr>
+            <td>Arquitetura</td>
+            <td>Classes específicas</td>
+            <td>Classe abstrata base + especialização</td>
+        </tr>
+        <tr>
+            <td>Logging</td>
+            <td>System.out.println</td>
+            <td>Módulo logging estruturado</td>
+        </tr>
+    </table>
+
+    <div class="note">
+        <p>Ambas as implementações seguem o mesmo padrão de nomes para exchanges, filas e routing keys, permitindo a interoperabilidade entre elas. Uma mensagem enviada pela implementação Java pode ser recebida pela implementação Python e vice-versa.</p>
+    </div>
+
+    <footer>
+        <p>Documentação da POC RabbitMQ em Python - Versão 1.0 - Data: 27/04/2025</p>
+    </footer>
+
+</body>
+</html>

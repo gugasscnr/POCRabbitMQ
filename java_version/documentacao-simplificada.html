@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da POC RabbitMQ em Java</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        code {
+            background-color: #f8f8f8;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            border-left: 4px solid #3498db;
+        }
+        .note {
+            background-color: #f0f7fb;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .architecture-diagram {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Documentação da POC RabbitMQ em Java</h1>
+
+    <p>Esta documentação descreve a implementação em Java da Prova de Conceito (POC) de RabbitMQ, demonstrando o uso de diferentes tipos de exchanges (Direct, Fanout, Topic) e filas.</p>
+
+    <h2>Índice</h2>
+    <ol>
+        <li><a href="#introducao">Introdução</a></li>
+        <li><a href="#conceitos">Conceitos Fundamentais do RabbitMQ</a>
+            <ul>
+                <li><a href="#exchanges">Exchanges</a></li>
+                <li><a href="#queues">Queues (Filas)</a></li>
+                <li><a href="#routing-keys">Routing Keys</a></li>
+            </ul>
+        </li>
+        <li><a href="#implementacao">Implementação da POC</a>
+            <ul>
+                <li><a href="#estrutura">Estrutura do Projeto</a></li>
+                <li><a href="#classes">Classes Principais</a></li>
+            </ul>
+        </li>
+        <li><a href="#execucao">Como Executar e Testar a POC</a></li>
+        <li><a href="#conclusao">Conclusão</a></li>
+    </ol>
+
+    <h2 id="introducao">1. Introdução</h2>
+    <p>Esta documentação descreve a Prova de Conceito (POC) desenvolvida para demonstrar o uso do RabbitMQ como solução de mensageria utilizando a linguagem Java.</p>
+    
+    <h3>1.1 Objetivo da POC</h3>
+    <p>O objetivo desta POC é demonstrar os seguintes conceitos do RabbitMQ:</p>
+    <ul>
+        <li>Diferentes tipos de <strong>exchanges</strong> (Direct, Fanout, Topic)</li>
+        <li>Criação e gerenciamento de <strong>filas</strong> (queues)</li>
+        <li>Implementação de <strong>routing keys</strong> para direcionamento de mensagens</li>
+        <li>Publicação e consumo de mensagens</li>
+    </ul>
+    
+    <h3>1.2 O que é RabbitMQ?</h3>
+    <p>RabbitMQ é um broker de mensagens de código aberto que implementa o protocolo Advanced Message Queuing Protocol (AMQP). Ele atua como intermediário para mensagens, permitindo que aplicações se comuniquem de forma assíncrona e desacoplada.</p>
+
+    <div class="note">
+        <strong>Principais benefícios do RabbitMQ:</strong>
+        <ul>
+            <li>Desacoplamento entre produtores e consumidores</li>
+            <li>Balanceamento de carga entre consumidores</li>
+            <li>Processamento assíncrono</li>
+            <li>Diferentes padrões de roteamento de mensagens</li>
+            <li>Alta disponibilidade e escalabilidade</li>
+        </ul>
+    </div>
+
+    <h2 id="conceitos">2. Conceitos Fundamentais do RabbitMQ</h2>
+    
+    <h3 id="exchanges">2.1 Exchanges</h3>
+    <p>Exchanges são os pontos de entrada para mensagens no RabbitMQ. Eles recebem mensagens dos produtores e as encaminham para filas conforme regras específicas.</p>
+    
+    <h4>2.1.1 Direct Exchange</h4>
+    <p>O Direct Exchange encaminha mensagens para filas baseado em uma correspondência exata entre a routing key da mensagem e a routing key usada para vincular a fila ao exchange.</p>
+    <pre>
+Producer → Direct Exchange → (routing key: poc.key.one) → Queue 1 → Consumer 1
+                          → (routing key: poc.key.two) → Queue 2 → Consumer 2</pre>
+    
+    <h4>2.1.2 Fanout Exchange</h4>
+    <p>O Fanout Exchange ignora routing keys e envia uma cópia da mensagem para todas as filas vinculadas a ele.</p>
+    <pre>
+                    → Queue 1 → Consumer 1
+Producer → Fanout Exchange
+                    → Queue 2 → Consumer 2</pre>
+    
+    <h4>2.1.3 Topic Exchange</h4>
+    <p>O Topic Exchange roteia mensagens para filas baseado em padrões de correspondência entre a routing key da mensagem e os padrões definidos nas vinculações das filas.</p>
+    <pre>
+Producer → Topic Exchange → (pattern: poc.topic.#) → Queue 3 → Consumer 3</pre>
+    
+    <div class="note">
+        <strong>Padrões de Routing Keys em Topic Exchange:</strong>
+        <ul>
+            <li><code>#</code> - corresponde a zero ou mais palavras delimitadas por ponto</li>
+            <li><code>*</code> - corresponde exatamente a uma palavra</li>
+            <li>Exemplo: <code>poc.topic.#</code> corresponde a <code>poc.topic.exemplo</code>, <code>poc.topic.importante.urgente</code>, etc.</li>
+        </ul>
+    </div>
+    
+    <h3 id="queues">2.2 Queues (Filas)</h3>
+    <p>Filas armazenam mensagens que serão consumidas pelas aplicações. Elas podem ter várias propriedades que afetam seu comportamento:</p>
+    
+    <table>
+        <tr>
+            <th>Propriedade</th>
+            <th>Descrição</th>
+            <th>Valor na POC</th>
+        </tr>
+        <tr>
+            <td>Durable</td>
+            <td>Indica se a fila sobrevive a reinicializações do servidor</td>
+            <td>true</td>
+        </tr>
+        <tr>
+            <td>Exclusive</td>
+            <td>Indica se a fila só pode ser acessada pela conexão que a criou</td>
+            <td>false</td>
+        </tr>
+        <tr>
+            <td>Auto-delete</td>
+            <td>Indica se a fila é excluída quando o último consumidor se desconecta</td>
+            <td>false</td>
+        </tr>
+    </table>
+    
+    <h3 id="routing-keys">2.3 Routing Keys</h3>
+    <p>Routing keys são endereços que o exchange usa para decidir como rotear a mensagem:</p>
+    
+    <table>
+        <tr>
+            <th>Tipo de Exchange</th>
+            <th>Comportamento da Routing Key</th>
+        </tr>
+        <tr>
+            <td>Direct</td>
+            <td>Correspondência exata para encaminhar mensagens</td>
+        </tr>
+        <tr>
+            <td>Fanout</td>
+            <td>Ignorada - mensagens são enviadas para todas as filas vinculadas</td>
+        </tr>
+        <tr>
+            <td>Topic</td>
+            <td>Correspondência por padrões com <code>#</code> e <code>*</code></td>
+        </tr>
+    </table>
+
+    <h2 id="implementacao">3. Implementação da POC</h2>
+    
+    <h3 id="estrutura">3.1 Estrutura do Projeto</h3>
+    <pre>
+POCrabbitMQ/
+├── pom.xml                                  # Configuração Maven
+├── src/main/java/com/example/rabbitmq/
+│   ├── RabbitMQApplication.java             # Aplicação principal
+│   ├── config/
+│   │   └── RabbitMQConfig.java              # Configuração
+│   ├── producer/
+│   │   └── MessageProducer.java             # Produtor de mensagens
+│   └── consumer/
+│       └── MessageConsumer.java             # Consumidor de mensagens</pre>
+    
+    <h3 id="classes">3.2 Principais Classes</h3>
+    
+    <h4>3.2.1 RabbitMQConfig</h4>
+    <p>Centraliza todas as configurações e constantes necessárias:</p>
+    <pre>
+public class RabbitMQConfig {
+    
+    // Configurações de conexão
+    private static final String HOST = "localhost";
+    private static final int PORT = 5672;
+    private static final String USERNAME = "guest";
+    private static final String PASSWORD = "guest";
+    
+    // Definições de exchanges
+    public static final String DIRECT_EXCHANGE = "poc.direct.exchange";
+    public static final String FANOUT_EXCHANGE = "poc.fanout.exchange";
+    public static final String TOPIC_EXCHANGE = "poc.topic.exchange";
+    
+    // Definições de filas
+    public static final String QUEUE_1 = "poc.queue.one";
+    public static final String QUEUE_2 = "poc.queue.two";
+    public static final String QUEUE_3 = "poc.queue.three";
+    
+    // Definições de routing keys
+    public static final String ROUTING_KEY_1 = "poc.key.one";
+    public static final String ROUTING_KEY_2 = "poc.key.two";
+    public static final String TOPIC_KEY_PATTERN = "poc.topic.#";
+    
+    // Método para criar conexão com o RabbitMQ
+    public static Connection createConnection() throws IOException, TimeoutException {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(HOST);
+        factory.setPort(PORT);
+        factory.setUsername(USERNAME);
+        factory.setPassword(PASSWORD);
+        
+        return factory.newConnection();
+    }
+}</pre>
+    
+    <h4>3.2.2 MessageProducer</h4>
+    <p>Responsável por publicar mensagens no RabbitMQ:</p>
+    <pre>
+public class MessageProducer {
+    
+    private final Connection connection;
+    private final Channel channel;
+    
+    // Declaração de exchanges
+    public void declareDirectExchange(String exchangeName) throws IOException {
+        channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, true);
+    }
+    
+    // Declaração de filas
+    public void declareQueue(String queueName) throws IOException {
+        channel.queueDeclare(queueName, true, false, false, null);
+    }
+    
+    // Vinculação de filas a exchanges
+    public void bindQueue(String queueName, String exchangeName, String routingKey) throws IOException {
+        channel.queueBind(queueName, exchangeName, routingKey);
+    }
+    
+    // Envio de mensagens
+    public void sendMessage(String exchange, String routingKey, String message) throws IOException {
+        channel.basicPublish(
+                exchange,
+                routingKey,
+                null,
+                message.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+}</pre>
+    
+    <h4>3.2.3 MessageConsumer</h4>
+    <p>Responsável por consumir mensagens das filas:</p>
+    <pre>
+public class MessageConsumer {
+    
+    private final Connection connection;
+    private final Channel channel;
+    
+    // Iniciar consumo de uma fila
+    public void startConsuming(String queueName, String consumerTag) throws IOException {
+        // Configuração de QoS
+        channel.basicQos(1);
+        
+        // Callback para processamento de mensagens
+        DeliverCallback deliverCallback = (consumerTag1, delivery) -> {
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            
+            // Exibir informações da mensagem
+            System.out.println("\n\n");
+            System.out.println("##############################################");
+            System.out.println("##          MENSAGEM RECEBIDA              ##");
+            System.out.println("# Consumer: " + consumerTag1);
+            System.out.println("# Mensagem: " + message);
+            System.out.println("# Exchange: " + delivery.getEnvelope().getExchange());
+            System.out.println("# Routing Key: " + delivery.getEnvelope().getRoutingKey());
+            System.out.println("##############################################");
+            
+            // Confirmação da mensagem
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+        };
+        
+        // Iniciar consumo
+        channel.basicConsume(queueName, false, consumerTag, deliverCallback, cancelCallback);
+    }
+}</pre>
+    
+    <h4>3.2.4 RabbitMQApplication</h4>
+    <p>Ponto de entrada da aplicação que configura e inicia todos os componentes:</p>
+    <pre>
+public class RabbitMQApplication {
+    
+    public static void main(String[] args) {
+        try {
+            // Criar conexão com RabbitMQ
+            Connection connection = RabbitMQConfig.createConnection();
+            
+            // Inicializar produtor
+            MessageProducer producer = new MessageProducer(connection);
+            
+            // Configurar exchanges e filas
+            setupExchangesAndQueues(producer);
+            
+            // Iniciar consumidores
+            startConsumers(connection);
+            
+            // Interface interativa para envio de mensagens
+            sendMessagesInteractively(producer);
+            
+            // Liberar recursos
+            producer.close();
+            connection.close();
+            
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+}</pre>
+
+    <h2 id="execucao">4. Como Executar e Testar a POC</h2>
+    
+    <h3>4.1 Pré-requisitos</h3>
+    <ul>
+        <li>Java 11 ou superior</li>
+        <li>RabbitMQ Server instalado e em execução</li>
+    </ul>
+    
+    <h3>4.2 Compilação e Execução</h3>
+    <pre>
+# Compilar as classes
+javac -d target\classes -cp "lib\amqp-client-5.16.0.jar;lib\slf4j-api-2.0.5.jar;lib\slf4j-simple-2.0.5.jar" src\main\java\com\example\rabbitmq\config\*.java src\main\java\com\example\rabbitmq\consumer\*.java src\main\java\com\example\rabbitmq\producer\*.java src\main\java\com\example\rabbitmq\*.java
+
+# Executar a aplicação
+java -cp "target\classes;lib\amqp-client-5.16.0.jar;lib\slf4j-api-2.0.5.jar;lib\slf4j-simple-2.0.5.jar" com.example.rabbitmq.RabbitMQApplication</pre>
+    
+    <h3>4.3 Testes a Realizar</h3>
+    
+    <h4>4.3.1 Teste do Direct Exchange</h4>
+    <ol>
+        <li>Selecione a opção <strong>1</strong> no menu principal</li>
+        <li>Escolha a routing key <strong>poc.key.one</strong> (opção 1)</li>
+        <li>Digite uma mensagem para enviar</li>
+        <li>A mensagem será recebida apenas pelo consumidor da fila <strong>poc.queue.one</strong></li>
+    </ol>
+    
+    <h4>4.3.2 Teste do Fanout Exchange</h4>
+    <ol>
+        <li>Selecione a opção <strong>2</strong> no menu principal</li>
+        <li>Digite uma mensagem para enviar</li>
+        <li>A mensagem será recebida pelos consumidores das filas <strong>poc.queue.one</strong> e <strong>poc.queue.two</strong></li>
+    </ol>
+    
+    <h4>4.3.3 Teste do Topic Exchange</h4>
+    <ol>
+        <li>Selecione a opção <strong>3</strong> no menu principal</li>
+        <li>Digite uma routing key que comece com <strong>poc.topic.</strong> (exemplo: <code>poc.topic.teste</code>)</li>
+        <li>Digite uma mensagem para enviar</li>
+        <li>A mensagem será recebida pelo consumidor da fila <strong>poc.queue.three</strong></li>
+    </ol>
+
+    <h2 id="conclusao">5. Conclusão</h2>
+    
+    <p>Esta Prova de Conceito demonstra os principais conceitos do RabbitMQ implementados em Java:</p>
+    
+    <ul>
+        <li>Diferentes tipos de exchanges e seus comportamentos</li>
+        <li>Criação e gerenciamento de filas</li>
+        <li>Uso de routing keys para direcionar mensagens</li>
+        <li>Publicação e consumo assíncrono de mensagens</li>
+    </ul>
+    
+    <p>O RabbitMQ é uma solução robusta para sistemas de mensageria, permitindo criar arquiteturas distribuídas e desacopladas. A implementação em Java demonstra como utilizar a biblioteca oficial de cliente para interagir com o RabbitMQ de forma eficiente.</p>
+
+    <div class="note">
+        <strong>Veja também:</strong> Para uma implementação equivalente em Python, consulte a documentação da versão Python desta POC disponível em <code>python_version/documentacao-simplificada.html</code>.
+    </div>
+
+    <footer>
+        <p>Documentação da POC RabbitMQ em Java - Versão 1.0 - Data: 27/04/2025</p>
+    </footer>
+
+</body>
+</html>

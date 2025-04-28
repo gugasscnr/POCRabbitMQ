@@ -1,0 +1,72 @@
+# Arquivos de bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribuição/empacotamento
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Ambientes virtuais
+venv/
+env/
+ENV/
+.env
+.venv/
+env.bak/
+venv.bak/
+
+# Arquivos de teste unitário/cobertura
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Notebooks Jupyter
+.ipynb_checkpoints
+
+# Logs
+*.log
+logs/
+log/
+
+# Arquivos e pastas específicos de IDEs
+# VS Code
+.vscode/
+*.code-workspace
+.history
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração local
+*.env
+*.env.local
+config.local.py
+
+# Pastas e arquivos específicos de pip
+pip-log.txt
+pip-delete-this-directory.txt

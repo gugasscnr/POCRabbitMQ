@@ -1,0 +1,61 @@
+# Arquivos compilados
+*.class
+target/
+out/
+build/
+
+# Arquivos de pacotes
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+logs/
+log/
+
+# Arquivos de configuração específicos do ambiente local
+application-local.properties
+application-local.yml
+
+# Arquivos gerados pelo Maven
+.mvn/
+mvnw
+mvnw.cmd
+release.properties
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+
+# Arquivos e pastas específicos de IDEs
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# NetBeans
+nbproject/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# VS Code
+.vscode/
+.code-workspace
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
