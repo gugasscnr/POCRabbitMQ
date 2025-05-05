@@ -26,6 +26,66 @@ class MessageProducer(RabbitMQClient):
         """
         super().__init__(connection_params=connection_params, connection=connection)
     
+    def declare_exchange(self, exchange_name, exchange_type='topic'):
+        """
+        Declares an exchange with the specified type
+        
+        Args:
+            exchange_name (str): Name of the exchange to declare
+            exchange_type (str, optional): Type of exchange to create ('direct', 'topic', 'fanout', 'headers')
+                                          Defaults to 'topic'
+        """
+        try:
+            with self.channel_operation() as channel:
+                channel.exchange_declare(
+                    exchange=exchange_name,
+                    exchange_type=exchange_type,
+                    durable=True
+                )
+            logger.info(f"Declared {exchange_type} exchange: {exchange_name}")
+        except Exception as e:
+            logger.error(f"Failed to declare exchange: {e}")
+            raise
+    
+    def declare_queue(self, queue_name):
+        """
+        Declares a queue with durability enabled
+        
+        Args:
+            queue_name (str): Name of the queue to declare
+        """
+        try:
+            with self.channel_operation() as channel:
+                channel.queue_declare(
+                    queue=queue_name,
+                    durable=True
+                )
+            logger.info(f"Declared queue: {queue_name}")
+        except Exception as e:
+            logger.error(f"Failed to declare queue: {e}")
+            raise
+    
+    def bind_queue(self, queue_name, exchange_name, routing_key):
+        """
+        Binds a queue to an exchange with a routing key
+        
+        Args:
+            queue_name (str): Name of the queue to bind
+            exchange_name (str): Name of the exchange to bind to
+            routing_key (str): Routing key to use for binding
+        """
+        try:
+            with self.channel_operation() as channel:
+                channel.queue_bind(
+                    queue=queue_name,
+                    exchange=exchange_name,
+                    routing_key=routing_key
+                )
+            logger.info(f"Bound queue {queue_name} to exchange {exchange_name} with routing key {routing_key}")
+        except Exception as e:
+            logger.error(f"Failed to bind queue: {e}")
+            raise
+    
     def send_message(self, exchange, routing_key, message, headers=None):
         """
         Sends a message to a specific exchange with a routing key

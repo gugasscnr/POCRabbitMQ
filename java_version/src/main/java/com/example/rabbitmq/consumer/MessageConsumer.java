@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -55,12 +56,14 @@ public class MessageConsumer implements AutoCloseable {
                 String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 String exchange = delivery.getEnvelope().getExchange();
                 String routingKey = delivery.getEnvelope().getRoutingKey();
+                Map<String, Object> headers = delivery.getProperties().getHeaders();
                 
                 logger.info("Received message from exchange: {} with routing key: {}", exchange, routingKey);
                 logger.debug("Message content: '{}'", message);
+                logger.debug("Headers: {}", headers);
                 
                 // Print formatted message
-                printFormattedMessage(consumerTag1, message, exchange, routingKey);
+                printFormattedMessage(consumerTag1, message, exchange, routingKey, headers);
                 
                 // Acknowledge message receipt
                 try {
@@ -68,7 +71,6 @@ public class MessageConsumer implements AutoCloseable {
                     logger.debug("Acknowledged message delivery tag: {}", delivery.getEnvelope().getDeliveryTag());
                 } catch (IOException e) {
                     logger.error("Failed to acknowledge message: {}", e.getMessage(), e);
-                    e.printStackTrace();
                 }
                 
                 // Display menu again for better UX
@@ -101,18 +103,33 @@ public class MessageConsumer implements AutoCloseable {
      * @param message The message content
      * @param exchange The exchange from which the message was received
      * @param routingKey The routing key used
+     * @param headers The headers from the message
      */
-    private void printFormattedMessage(String consumerTag, String message, String exchange, String routingKey) {
-        System.out.println("\n\n");
+    private void printFormattedMessage(String consumerTag, String message, String exchange, String routingKey, Map<String, Object> headers) {
+        System.out.println("\n");
         System.out.println("##############################################");
         System.out.println("##          MENSAGEM RECEBIDA              ##");
         System.out.println("##############################################");
         System.out.println("# Consumer: " + consumerTag);
-        System.out.println("# Mensagem: " + message);
         System.out.println("# Exchange: " + exchange);
         System.out.println("# Routing Key: " + routingKey);
+        
+        // Format message with truncation for long messages
+        if (message.length() > 100) {
+            System.out.println("# Mensagem: " + message.substring(0, 100) + "...");
+        } else {
+            System.out.println("# Mensagem: " + message);
+        }
+        
+        // Format headers if present
+        if (headers != null && !headers.isEmpty()) {
+            System.out.println("# Headers:");
+            for (Map.Entry<String, Object> entry : headers.entrySet()) {
+                System.out.println("#   " + entry.getKey() + ": " + entry.getValue());
+            }
+        }
+        
         System.out.println("##############################################");
-        System.out.println("\n");
     }
     
     /**
@@ -121,8 +138,6 @@ public class MessageConsumer implements AutoCloseable {
     private void printMenu() {
         System.out.println("\nSelect exchange type to send message:");
         System.out.println("1. Direct Exchange");
-        System.out.println("2. Fanout Exchange");
-        System.out.println("3. Topic Exchange");
         System.out.println("0. Exit");
         System.out.print("Enter your choice: ");
     }
@@ -140,6 +155,6 @@ public class MessageConsumer implements AutoCloseable {
             logger.debug("Closing channel: {}", channel.getChannelNumber());
             channel.close();
         }
-        logger.info("MessageConsumer resources closed");
+        logger.debug("MessageConsumer resources closed");
     }
 }

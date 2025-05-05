@@ -10,6 +10,7 @@ HOST = "localhost"
 PORT = 5672
 USERNAME = "guest"
 PASSWORD = "guest"
+VIRTUAL_HOST = "/"
 
 # Exchange name - trade inbound
 TRADE_EXCHANGE = "ex.trade.standard.corporatebond"

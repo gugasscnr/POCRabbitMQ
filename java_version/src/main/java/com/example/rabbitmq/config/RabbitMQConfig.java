@@ -21,21 +21,16 @@ public class RabbitMQConfig {
     private static final int PORT = 5672;
     private static final String USERNAME = "guest";
     private static final String PASSWORD = "guest";
+    private static final String VIRTUAL_HOST = "/";
     
-    // Exchange names
-    public static final String DIRECT_EXCHANGE = "poc.direct.exchange";
-    public static final String FANOUT_EXCHANGE = "poc.fanout.exchange";
-    public static final String TOPIC_EXCHANGE = "poc.topic.exchange";
+    // Exchange name - trade inbound (matching Python version)
+    public static final String TRADE_EXCHANGE = "ex.trade.standard.corporatebond";
     
-    // Queue names
-    public static final String QUEUE_1 = "poc.queue.one";
-    public static final String QUEUE_2 = "poc.queue.two";
-    public static final String QUEUE_3 = "poc.queue.three";
+    // Queue name
+    public static final String QUEUE_NAME = "poc.queue.one";
     
-    // Routing keys
-    public static final String ROUTING_KEY_1 = "poc.key.one";
-    public static final String ROUTING_KEY_2 = "poc.key.two";
-    public static final String TOPIC_KEY_PATTERN = "poc.topic.#";
+    // Routing key
+    public static final String ROUTING_KEY = "poc.key.one";
     
     /**
      * Creates and returns a connection to RabbitMQ server using the
@@ -53,6 +48,7 @@ public class RabbitMQConfig {
         factory.setPort(PORT);
         factory.setUsername(USERNAME);
         factory.setPassword(PASSWORD);
+        factory.setVirtualHost(VIRTUAL_HOST);
         
         Connection connection = factory.newConnection();
         logger.info("Successfully established connection to RabbitMQ server");

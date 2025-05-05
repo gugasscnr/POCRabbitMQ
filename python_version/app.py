@@ -11,7 +11,7 @@ import sys
 import logging
 import json
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import contextmanager
 import config
 from producer import MessageProducer
@@ -31,6 +31,7 @@ def create_connection_params():
     return pika.ConnectionParameters(
         host=config.HOST,
         port=config.PORT,
+        virtual_host=config.VIRTUAL_HOST,
         credentials=credentials
     )
 
@@ -72,13 +73,13 @@ def send_message_with_headers(producer, exchange, routing_key, queue):
     event_id = str(uuid.uuid4())
     
     # Timestamp atual em formato ISO 8601 UTC (Zulu)
-    update_time = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    update_time = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     
     # Data atual para eventDate em formato UTC
-    event_date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    event_date = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     
     # Data de referência para eventReferenceDate
-    event_reference_date = datetime.now().strftime('%Y-%m-%d')
+    event_reference_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     
     # Backoffice status
     backoffice_status = "test.qa.123"
@@ -180,7 +181,7 @@ def send_message_with_headers(producer, exchange, routing_key, queue):
         "creationDateTime": update_time, 
         "referencePerAcquisition": [
             {
-                "buyDate": datetime.now().strftime('%Y-%m-%d'), 
+                "buyDate": datetime.now(timezone.utc).strftime('%Y-%m-%d'), 
                 "buyRate": {"post": 75.0, "fixed": 0.0, "index": "DI"}, 
                 "quantity": 1000, 
                 "reference": "100502982", 
@@ -249,6 +250,17 @@ def main():
         with rabbitmq_connection() as connection:
             # Inicializa o produtor
             producer = MessageProducer(connection=connection)
+            
+            # Declara a exchange como tipo topic
+            producer.declare_exchange(exchange, exchange_type='topic')
+            
+            # Declara a fila
+            producer.declare_queue(queue)
+            
+            # Vincula a fila à exchange com a routing key
+            producer.bind_queue(queue, exchange, routing_key)
+            
+            logger.info("Exchange, queue e binding configurados com sucesso")
             
             # Envia a mensagem com headers
             send_message_with_headers(producer, exchange, routing_key, queue)
