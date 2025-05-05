@@ -47,8 +47,11 @@ class MessageConsumer(RabbitMQClient):
                 try:
                     message = body.decode('utf-8')
                     
+                    # Extract headers from properties if available
+                    headers = properties.headers if properties and hasattr(properties, 'headers') else None
+                    
                     # Print message in a formatted way
-                    self._print_received_message(consumer_tag, message, method.exchange, method.routing_key)
+                    self._print_received_message(consumer_tag, message, method.exchange, method.routing_key, headers)
                     
                     # Acknowledge message receipt
                     ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -68,7 +71,7 @@ class MessageConsumer(RabbitMQClient):
                 auto_ack=False
             )
     
-    def _print_received_message(self, consumer_tag, message, exchange, routing_key):
+    def _print_received_message(self, consumer_tag, message, exchange, routing_key, headers=None):
         """
         Helper method to print received message in a formatted way
         
@@ -77,6 +80,7 @@ class MessageConsumer(RabbitMQClient):
             message (str): The message content
             exchange (str): The exchange from which the message was received
             routing_key (str): The routing key used
+            headers (dict, optional): Headers from the message properties
         """
         print("\n\n")
         print("##############################################")
@@ -86,10 +90,12 @@ class MessageConsumer(RabbitMQClient):
         print(f"# Mensagem: {message}")
         print(f"# Exchange: {exchange}")
         print(f"# Routing Key: {routing_key}")
+        if headers:
+            print(f"# Headers: {headers}")
         print("##############################################")
         print("\n")
         
-        logger.info(f"Received message: '{message}' by consumer '{consumer_tag}' from exchange: {exchange} with routing key: {routing_key}")
+        logger.info(f"Received message: '{message}' by consumer '{consumer_tag}' from exchange: {exchange} with routing key: {routing_key}, headers: {headers}")
     
     def _print_menu(self):
         """Helper method to redisplay the menu after message reception"""

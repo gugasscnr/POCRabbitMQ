@@ -78,63 +78,6 @@ class RabbitMQClient(ABC):
             logger.error(f"Unexpected error in channel operation: {e}")
             raise
     
-    def declare_exchange(self, exchange_name, exchange_type, durable=True):
-        """
-        Declare an exchange
-        
-        Args:
-            exchange_name (str): Name of the exchange
-            exchange_type (str): Type of exchange ('direct', 'fanout', 'topic', etc.)
-            durable (bool, optional): Whether the exchange should survive broker restarts
-        """
-        with self.channel_operation() as channel:
-            channel.exchange_declare(
-                exchange=exchange_name,
-                exchange_type=exchange_type,
-                durable=durable
-            )
-            logger.info(f"Declared {exchange_type} exchange: {exchange_name}")
-    
-    def declare_queue(self, queue_name, durable=True, exclusive=False, auto_delete=False):
-        """
-        Declare a queue
-        
-        Args:
-            queue_name (str): Name of the queue
-            durable (bool, optional): Whether the queue should survive broker restarts
-            exclusive (bool, optional): Used by only one connection and deleted when connection closes
-            auto_delete (bool, optional): Delete when no more consumers
-        
-        Returns:
-            str: The queue name (which might be auto-generated if queue_name was empty)
-        """
-        with self.channel_operation() as channel:
-            result = channel.queue_declare(
-                queue=queue_name,
-                durable=durable,
-                exclusive=exclusive,
-                auto_delete=auto_delete
-            )
-            logger.info(f"Declared queue: {queue_name}")
-            return result.method.queue
-    
-    def bind_queue(self, queue_name, exchange_name, routing_key):
-        """
-        Bind a queue to an exchange with a routing key
-        
-        Args:
-            queue_name (str): Name of the queue
-            exchange_name (str): Name of the exchange
-            routing_key (str): Routing key for the binding
-        """
-        with self.channel_operation() as channel:
-            channel.queue_bind(
-                queue=queue_name,
-                exchange=exchange_name,
-                routing_key=routing_key
-            )
-            logger.info(f"Bound queue {queue_name} to exchange {exchange_name} with routing key '{routing_key}'")
-    
     def close(self):
         """Close the channel and connection"""
         try:
