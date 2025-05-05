@@ -41,7 +41,7 @@ class RabbitMQClient(ABC):
         if not self.connection and self.connection_params:
             try:
                 self.connection = pika.BlockingConnection(self.connection_params)
-                logger.info("Created new RabbitMQ connection")
+                logger.debug("Created new RabbitMQ connection")
             except Exception as e:
                 logger.error(f"Failed to create RabbitMQ connection: {e}")
                 raise
@@ -49,7 +49,7 @@ class RabbitMQClient(ABC):
         if self.connection:
             try:
                 self.channel = self.connection.channel()
-                logger.info("Created RabbitMQ channel")
+                logger.debug("Created RabbitMQ channel")
             except Exception as e:
                 logger.error(f"Failed to create RabbitMQ channel: {e}")
                 raise
@@ -83,7 +83,7 @@ class RabbitMQClient(ABC):
         try:
             if self.channel and self.channel.is_open:
                 self.channel.close()
-                logger.info("Closed RabbitMQ channel")
+                logger.debug("Closed RabbitMQ channel")
         except Exception as e:
             logger.error(f"Error closing channel: {e}")
         
@@ -91,7 +91,7 @@ class RabbitMQClient(ABC):
         if self.connection_params and self.connection:
             try:
                 self.connection.close()
-                logger.info("Closed RabbitMQ connection")
+                logger.debug("Closed RabbitMQ connection")
             except Exception as e:
                 logger.error(f"Error closing connection: {e}")
     

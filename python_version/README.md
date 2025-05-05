@@ -1,12 +1,12 @@
 # RabbitMQ Python POC
 
-Esta é uma implementação em Python da POC de RabbitMQ, demonstrando o uso de diferentes tipos de exchanges (Direct, Fanout, Topic) e filas.
+Esta é uma implementação em Python para envio de mensagens para RabbitMQ com headers customizados.
 
 ## Requisitos
 
 - Python 3.6+
 - RabbitMQ Server em execução (localhost:5672)
-- Biblioteca pika
+- Biblioteca pika 1.3.2
 
 ## Instalação
 
@@ -17,12 +17,22 @@ Esta é uma implementação em Python da POC de RabbitMQ, demonstrando o uso de 
 pip install -r requirements.txt
 ```
 
+3. Ative o ambiente virtual, se existir:
+
+```bash
+# Windows
+.\venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
 ## Estrutura do Projeto
 
 - `config.py` - Configurações de conexão e definições de exchanges/filas/routing keys
 - `producer.py` - Implementação do produtor de mensagens
-- `consumer.py` - Implementação do consumidor de mensagens
-- `app.py` - Aplicação principal que configura e demonstra o uso do RabbitMQ
+- `rabbitmq_client.py` - Classe base para operações com RabbitMQ
+- `app.py` - Aplicação principal que envia mensagens com headers para o RabbitMQ
 
 ## Como Executar
 
@@ -34,31 +44,51 @@ python app.py
 
 A aplicação irá:
 1. Conectar ao servidor RabbitMQ
-2. Configurar exchanges (Direct, Fanout, Topic) e filas
-3. Iniciar consumidores para cada fila
-4. Apresentar um menu interativo para enviar mensagens a diferentes exchanges
+2. Gerar um novo trade ID aleatório
+3. Criar um timestamp no formato UTC Zulu (ISO 8601)
+4. Enviar uma mensagem JSON para o RabbitMQ com os seguintes headers:
+   - content-type: application/json
+   - app-id: python-rabbitmq-poc
+   - correlation-id: test-{trade_id}
+   - timestamp: {update_time}
+   - x-trade-id: {trade_id}
+   - x-backoffice-status: test.qa.123
+5. Finalizar após o envio bem-sucedido
 
-## Tipos de Exchanges
+## Funcionamento
 
-### Direct Exchange
-- As mensagens são roteadas para filas com base em uma combinação exata da routing key
-- Exemplo: `poc.direct.exchange` com routing keys `poc.key.one` e `poc.key.two`
+A aplicação utiliza o exchange e routing key definidos no arquivo `config.py` para enviar mensagens para o RabbitMQ. Não é necessário configurar exchanges ou filas, pois assume-se que estas já existem no ambiente.
 
-### Fanout Exchange
-- As mensagens são enviadas para todas as filas vinculadas, ignorando a routing key
-- Exemplo: `poc.fanout.exchange`
+### Formato da Mensagem
 
-### Topic Exchange
-- As mensagens são roteadas para filas com base em padrões de routing key
-- Padrão: `poc.topic.#` (onde # pode ser qualquer sequência de palavras)
-- Exemplo: enviar mensagem com routing key `poc.topic.test` será recebida pela fila 3
+A mensagem enviada tem o seguinte formato JSON:
 
-## Diferenças em Relação à Implementação Java
+```json
+{
+  "trade_id": 123456,
+  "update_time": "2025-05-05T11:45:23.456Z",
+  "backoffice_status": "test.qa.123",
+  "status": "PROCESSED",
+  "message": "Teste de mensagem com cabeçalhos"
+}
+```
 
-Esta implementação em Python segue os mesmos conceitos e estruturas da versão Java original, porém utilizando:
+### Headers da Mensagem
 
-1. A biblioteca `pika` - cliente oficial Python para RabbitMQ
-2. Estruturas de dados e convenções de nomenclatura típicas de Python (snake_case)
-3. Implementação adaptada para o modelo de comunicação do pika
+Os headers enviados com a mensagem incluem:
 
-A funcionalidade e o comportamento são equivalentes à versão Java.
+| Header | Descrição |
+|--------|-----------|
+| content-type | Tipo de conteúdo da mensagem (application/json) |
+| app-id | Identificador da aplicação |
+| correlation-id | ID de correlação para rastreamento |
+| timestamp | Timestamp UTC no formato ISO 8601 com Z (Zulu) |
+| x-trade-id | ID da transação |
+| x-backoffice-status | Status do backoffice |
+
+## Customização
+
+Para customizar o comportamento da aplicação, você pode modificar os seguintes arquivos:
+
+- `config.py` - Para alterar parâmetros de conexão, nome do exchange ou routing key
+- `app.py` - Para modificar a estrutura da mensagem ou os headers enviados

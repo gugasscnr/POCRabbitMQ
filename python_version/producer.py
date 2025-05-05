@@ -50,10 +50,9 @@ class MessageProducer(RabbitMQClient):
                     body=message.encode('utf-8'),
                     properties=properties
                 )
-            logger.info(f"Sent message: '{message}' to exchange: {exchange} with routing key: {routing_key} and headers: {headers}")
-            print(f"Sent message: '{message}' to exchange: {exchange} with routing key: {routing_key}")
-            if headers:
-                print(f"With headers: {headers}")
+            logger.info(f"Sent message to exchange: {exchange} with routing key: {routing_key}")
+            logger.debug(f"Message content: '{message}'")
+            logger.debug(f"Headers: {headers}")
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
             raise

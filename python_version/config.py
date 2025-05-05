@@ -11,17 +11,11 @@ PORT = 5672
 USERNAME = "guest"
 PASSWORD = "guest"
 
-# Exchange names
-DIRECT_EXCHANGE = "poc.direct.exchange"
-FANOUT_EXCHANGE = "poc.fanout.exchange"
-TOPIC_EXCHANGE = "poc.topic.exchange"
+# Exchange name - trade inbound
+TRADE_EXCHANGE = "ex.trade.standard.corporatebond"
 
-# Queue names
-QUEUE_1 = "poc.queue.one"
-QUEUE_2 = "poc.queue.two" 
-QUEUE_3 = "poc.queue.three"
+# Queue name
+QUEUE_NAME = "poc.queue.one"
 
-# Routing keys
-ROUTING_KEY_1 = "poc.key.one"
-ROUTING_KEY_2 = "poc.key.two"
-TOPIC_KEY_PATTERN = "poc.topic.#"
+# Routing key
+ROUTING_KEY = "poc.key.one"

@@ -82,20 +82,23 @@ class MessageConsumer(RabbitMQClient):
             routing_key (str): The routing key used
             headers (dict, optional): Headers from the message properties
         """
-        print("\n\n")
+        print("\n")
         print("##############################################")
         print("##          MENSAGEM RECEBIDA              ##")
         print("##############################################")
         print(f"# Consumer: {consumer_tag}")
-        print(f"# Mensagem: {message}")
         print(f"# Exchange: {exchange}")
         print(f"# Routing Key: {routing_key}")
+        print(f"# Mensagem: {message[:100]}..." if len(message) > 100 else f"# Mensagem: {message}")
         if headers:
-            print(f"# Headers: {headers}")
+            print("# Headers:")
+            for key, value in headers.items():
+                print(f"#   {key}: {value}")
         print("##############################################")
-        print("\n")
         
-        logger.info(f"Received message: '{message}' by consumer '{consumer_tag}' from exchange: {exchange} with routing key: {routing_key}, headers: {headers}")
+        logger.info(f"Received message by consumer '{consumer_tag}' from exchange: {exchange} with routing key: {routing_key}")
+        logger.debug(f"Message content: '{message}'")
+        logger.debug(f"Headers: {headers}")
     
     def _print_menu(self):
         """Helper method to redisplay the menu after message reception"""
