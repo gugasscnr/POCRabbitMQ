@@ -56,11 +56,26 @@ class MessageProducer(RabbitMQClient):
         """
         try:
             with self.channel_operation() as channel:
-                channel.queue_declare(
-                    queue=queue_name,
-                    durable=True
-                )
-            logger.info(f"Declared queue: {queue_name}")
+                try:
+                    # First, try to check if the queue exists using queue_declare with passive=True
+                    # This won't create the queue if it doesn't exist, and won't modify it if it does exist
+                    channel.queue_declare(queue=queue_name, passive=True)
+                    logger.info(f"Queue already exists, using existing queue: {queue_name}")
+                except pika.exceptions.ChannelClosedByBroker:
+                    # Queue doesn't exist, need to reopen the channel since it was closed by the broker
+                    self._create_channel()
+                    
+                    with self.channel_operation() as new_channel:
+                        # Create the queue with the necessary arguments
+                        arguments = {
+                            'x-dead-letter-exchange': ''  # Empty string as per the existing queue configuration
+                        }
+                        new_channel.queue_declare(
+                            queue=queue_name,
+                            durable=True,
+                            arguments=arguments
+                        )
+                        logger.info(f"Queue doesn't exist, created queue: {queue_name} with dead-letter-exchange")
         except Exception as e:
             logger.error(f"Failed to declare queue: {e}")
             raise
