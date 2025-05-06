@@ -73,8 +73,7 @@ public class MessageConsumer implements AutoCloseable {
                     logger.error("Failed to acknowledge message: {}", e.getMessage(), e);
                 }
                 
-                // Display menu again for better UX
-                printMenu();
+                // O menu interativo não será mais exibido
             } catch (Exception e) {
                 logger.error("Error processing delivered message: {}", e.getMessage(), e);
                 // In case of exception, attempt to nack the message
@@ -108,7 +107,7 @@ public class MessageConsumer implements AutoCloseable {
     private void printFormattedMessage(String consumerTag, String message, String exchange, String routingKey, Map<String, Object> headers) {
         System.out.println("\n");
         System.out.println("##############################################");
-        System.out.println("##          MENSAGEM RECEBIDA              ##");
+        System.out.println("##            MENSAGEM ENVIADA             ##");
         System.out.println("##############################################");
         System.out.println("# Consumer: " + consumerTag);
         System.out.println("# Exchange: " + exchange);
@@ -130,16 +129,6 @@ public class MessageConsumer implements AutoCloseable {
         }
         
         System.out.println("##############################################");
-    }
-    
-    /**
-     * Prints the menu options for the interactive console.
-     */
-    private void printMenu() {
-        System.out.println("\nSelect exchange type to send message:");
-        System.out.println("1. Direct Exchange");
-        System.out.println("0. Exit");
-        System.out.print("Enter your choice: ");
     }
     
     /**

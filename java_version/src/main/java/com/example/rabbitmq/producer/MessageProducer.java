@@ -47,7 +47,7 @@ public class MessageProducer implements AutoCloseable {
      */
     public void declareExchange(String exchangeName) throws IOException {
         logger.info("Declaring exchange: {}", exchangeName);
-        channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT, true);
+        channel.exchangeDeclare(exchangeName, BuiltinExchangeType.TOPIC, true);
     }
     
     /**
