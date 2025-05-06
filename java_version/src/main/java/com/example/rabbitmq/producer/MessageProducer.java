@@ -57,8 +57,22 @@ public class MessageProducer implements AutoCloseable {
      * @throws IOException If the queue cannot be declared
      */
     public void declareQueue(String queueName) throws IOException {
-        logger.info("Declaring durable queue: {}", queueName);
-        channel.queueDeclare(queueName, true, false, false, null);
+        logger.info("Checking if queue exists: {}", queueName);
+        try {
+            // Try to passively declare the queue to check if it exists
+            // If it exists, this won't throw an exception and won't modify its properties
+            channel.queueDeclarePassive(queueName);
+            logger.info("Queue already exists, using existing queue: {}", queueName);
+        } catch (IOException e) {
+            // Queue doesn't exist, so create it
+            logger.info("Queue doesn't exist, declaring durable queue: {}", queueName);
+            
+            // Add queue arguments including dead letter exchange
+            Map<String, Object> args = new HashMap<>();
+            args.put("x-dead-letter-exchange", ""); // Empty string is what the existing queue has
+            
+            channel.queueDeclare(queueName, true, false, false, args);
+        }
     }
     
     /**
