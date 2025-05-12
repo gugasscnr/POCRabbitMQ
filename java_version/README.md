@@ -1,88 +1,116 @@
-# RabbitMQ POC - Versão Java
+# API REST RabbitMQ - Versão Java
 
-Esta é a versão em Java da Prova de Conceito (POC) que demonstra o uso do RabbitMQ, incluindo diferentes tipos de exchanges, filas e routing keys.
+Esta é uma API REST em Java para comunicação com o RabbitMQ. A API permite enviar mensagens para diferentes exchanges com routing keys personalizadas, configurar filas e exchanges, além de verificar a saúde da conexão.
 
 ## Estrutura do Projeto
 
-- **RabbitMQConfig**: Classe de configuração com constantes para exchanges, filas e routing keys
-- **MessageProducer**: Responsável por enviar mensagens para o RabbitMQ
-- **MessageConsumer**: Responsável por consumir mensagens das filas
-- **RabbitMQApplication**: Aplicação principal que demonstra o funcionamento da POC
+- **RabbitMQApplication**: Classe principal de inicialização do Spring Boot
+- **RabbitMQConfiguration**: Configuração para conexão com o servidor RabbitMQ
+- **RabbitMQService**: Serviço para operações com o RabbitMQ (envio de mensagens, criação de filas, etc.)
+- **RabbitMQController**: Controlador REST para exposição dos endpoints da API
+- **Modelos**: Classes de modelo para request/response da API
 
-## Conceitos Demonstrados
+## Funcionalidades da API
 
-1. **Exchanges**:
-   - Direct Exchange: Roteia mensagens para filas baseado no routing key exato
-   - Fanout Exchange: Entrega mensagens para todas as filas vinculadas, ignorando routing keys
-   - Topic Exchange: Roteia mensagens baseado em padrões de routing keys usando wildcards
+1. **Envio de Mensagens**:
+   - Envio de mensagens para exchanges com routing keys e cabeçalhos personalizados
+   - Suporte a diferentes tipos de mensagens JSON
 
-2. **Queues**: Três filas diferentes são criadas para demonstrar diferentes padrões de consumo
+2. **Configuração de Recursos**:
+   - Criação e configuração de exchanges (direct, fanout, topic, headers)
+   - Criação e configuração de filas com parâmetros personalizáveis
+   - Associação de filas a exchanges com routing keys específicas
 
-3. **Routing Keys**: Usadas para direcionar mensagens do exchange para as filas apropriadas
+3. **Monitoramento**:
+   - Verificação da existência de filas e exchanges
+   - Verificação da saúde da conexão com o RabbitMQ
 
 ## Pré-requisitos
 
 - Java 11 ou superior
-- Maven (opcional)
+- Maven
 - RabbitMQ Server rodando localmente (padrão: localhost:5672)
 
 ## Como Executar
 
 ### Usando Maven
 
-Se você tem o Maven instalado:
+1. Compile e execute o projeto com Spring Boot:
+   ```
+   mvn spring-boot:run
+   ```
 
-1. Compile o projeto:
+   Ou compile e execute separadamente:
    ```
    mvn clean package
+   java -jar target/rabbitmq-poc-1.0-SNAPSHOT.jar
    ```
 
-2. Execute a aplicação:
-   ```
-   java -jar target/rabbitmq-poc-1.0-SNAPSHOT-jar-with-dependencies.jar
-   ```
+2. A API estará disponível em: http://localhost:8080/
+   
+3. Acesse a documentação da API em: http://localhost:8080/api-doc.html
 
-### Compilação Manual (sem Maven)
+## Como Usar a API
 
-1. Crie a pasta para os arquivos compilados:
-   ```
-   mkdir -p target/classes
-   ```
+### 1. Enviando Mensagens
 
-2. Compile as classes:
-   ```
-   javac -d target\classes -cp "path\to\amqp-client-5.16.0.jar;path\to\slf4j-api-2.0.5.jar;path\to\slf4j-simple-2.0.5.jar" src\main\java\com\example\rabbitmq\config\*.java src\main\java\com\example\rabbitmq\consumer\*.java src\main\java\com\example\rabbitmq\producer\*.java src\main\java\com\example\rabbitmq\*.java
-   ```
+**Endpoint**: `POST /api/rabbitmq/message`
 
-3. Execute a aplicação:
-   ```
-   java -cp "target\classes;path\to\amqp-client-5.16.0.jar;path\to\slf4j-api-2.0.5.jar;path\to\slf4j-simple-2.0.5.jar" com.example.rabbitmq.RabbitMQApplication
-   ```
+**Exemplo de requisição**:
+```json
+{
+  "exchange": "ex.trade.standard.corporatebond",
+  "routingKey": "poc.key.one",
+  "body": {
+    "id": "1234567890123",
+    "tradeType": "BUY",
+    "message": "Teste de mensagem"
+  },
+  "headers": {
+    "event.layout": "panorama-trade-v1",
+    "objectType": "position_trade",
+    "content-type": "application/json"
+  }
+}
+```
 
-## Como Testar
+### 2. Configurando uma Fila e Exchange
 
-Após iniciar a aplicação, você verá um menu interativo:
+**Endpoint**: `POST /api/rabbitmq/queue`
 
-1. **Direct Exchange (Opção 1)**:
-   - Escolha uma routing key (1 ou 2)
-   - Digite uma mensagem
-   - A mensagem será enviada apenas para a fila correspondente à routing key escolhida
+**Exemplo de requisição**:
+```json
+{
+  "queueName": "poc.queue.one",
+  "exchangeName": "ex.trade.standard.corporatebond",
+  "exchangeType": "topic",
+  "routingKey": "poc.key.one",
+  "durable": true,
+  "exclusive": false,
+  "autoDelete": false,
+  "arguments": {
+    "x-dead-letter-exchange": ""
+  }
+}
+```
 
-2. **Fanout Exchange (Opção 2)**:
-   - Digite uma mensagem
-   - A mensagem será enviada para todas as filas vinculadas ao fanout exchange
+### 3. Verificando a Existência de uma Exchange
 
-3. **Topic Exchange (Opção 3)**:
-   - Digite uma routing key no formato 'poc.topic.*' (ex: poc.topic.test)
-   - Digite uma mensagem
-   - A mensagem será enviada para filas que correspondem ao padrão da routing key
+**Endpoint**: `GET /api/rabbitmq/exchange/{name}`
 
-4. **Sair (Opção 0)**:
-   - Encerra a aplicação
+### 4. Verificando a Existência de uma Fila
+
+**Endpoint**: `GET /api/rabbitmq/queue/{name}`
+
+### 5. Verificando a Saúde da Conexão
+
+**Endpoint**: `GET /api/rabbitmq/health`
 
 ## Observações
 
-- O código usa conexões e canais do RabbitMQ de forma apropriada
-- As mensagens são confirmadas (acknowledged) quando processadas
-- A aplicação inclui tratamento de erros básico
-- Este é um exemplo didático e pode precisar de ajustes para uso em produção
+- A API usa Spring Boot com RestControllers para exposição dos endpoints
+- O serviço utiliza a biblioteca oficial do RabbitMQ para Java
+- As conexões e canais são gerenciados de forma apropriada
+- A API inclui tratamento de erros e validação de entradas
+- Os endpoints são documentados e podem ser testados via ferramentas como Postman ou cURL
+- Para uso em produção, considere adicionar autenticação e mecanismos de rate limiting

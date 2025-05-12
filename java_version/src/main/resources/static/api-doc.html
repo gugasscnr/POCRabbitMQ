@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação da API RabbitMQ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #3498db;
+            margin-top: 20px;
+        }
+        
+        code {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+            padding: 2px 5px;
+            font-size: 14px;
+        }
+        
+        pre {
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            overflow-x: auto;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+        
+        .endpoint {
+            background-color: #f5f5f5;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 0 3px 3px 0;
+        }
+        
+        .method {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .get {
+            background-color: #61affe;
+        }
+        
+        .post {
+            background-color: #49cc90;
+        }
+        
+        .delete {
+            background-color: #f93e3e;
+        }
+        
+        .put {
+            background-color: #fca130;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Documentação da API RabbitMQ</h1>
+    
+    <section>
+        <h2>Visão Geral</h2>
+        <p>
+            Esta API fornece endpoints para interagir com um servidor RabbitMQ. Você pode enviar mensagens,
+            configurar filas e exchanges, verificar a existência de recursos e monitorar a saúde da conexão.
+        </p>
+    </section>
+    
+    <section>
+        <h2>Endpoints</h2>
+        
+        <div class="endpoint">
+            <h3><span class="method post">POST</span> /api/rabbitmq/message</h3>
+            <p>Envia uma mensagem para uma exchange do RabbitMQ com uma routing key específica.</p>
+            
+            <h4>Corpo da Requisição</h4>
+            <pre>{
+  "exchange": "nome-da-exchange",
+  "routingKey": "chave.de.roteamento",
+  "body": "Conteúdo da mensagem ou objeto JSON",
+  "headers": {
+    "chave1": "valor1",
+    "chave2": "valor2"
+  }
+}</pre>
+            
+            <h4>Exemplo de Requisição</h4>
+            <pre>
+curl -X POST "http://localhost:8081/api/rabbitmq/message" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "exchange": "ex.trade.standard.corporatebond",
+       "routingKey": "poc.key.one",
+       "body": {
+         "id": "1234567890123",
+         "message": "Teste de mensagem"
+       },
+       "headers": {
+         "event.layout": "panorama-trade-v1",
+         "objectType": "position_trade",
+         "content-type": "application/json"
+       }
+     }'
+            </pre>
+            
+            <h4>Resposta</h4>
+            <pre>{
+  "success": true,
+  "message": "Mensagem enviada com sucesso para o RabbitMQ",
+  "timestamp": "2025-05-12T09:30:00.000",
+  "data": null
+}</pre>
+        </div>
+    </section>
+    
+    <section>
+        <h2>Modelos de Dados</h2>
+        
+        <h3>RabbitMQMessageRequest</h3>
+        <table>
+            <tr>
+                <th>Propriedade</th>
+                <th>Tipo</th>
+                <th>Obrigatório</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>exchange</td>
+                <td>string</td>
+                <td>Sim</td>
+                <td>Nome da exchange para enviar a mensagem</td>
+            </tr>
+            <tr>
+                <td>routingKey</td>
+                <td>string</td>
+                <td>Sim</td>
+                <td>Routing key para direcionar a mensagem para a fila correta</td>
+            </tr>
+            <tr>
+                <td>body</td>
+                <td>object/string</td>
+                <td>Sim</td>
+                <td>Conteúdo da mensagem a ser enviada</td>
+            </tr>
+            <tr>
+                <td>headers</td>
+                <td>object</td>
+                <td>Não</td>
+                <td>Cabeçalhos a serem incluídos na mensagem</td>
+            </tr>
+        </table>
+        
+        <h3>ApiResponse</h3>
+        <table>
+            <tr>
+                <th>Propriedade</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+            </tr>
+            <tr>
+                <td>success</td>
+                <td>boolean</td>
+                <td>Indica se a operação foi bem-sucedida</td>
+            </tr>
+            <tr>
+                <td>message</td>
+                <td>string</td>
+                <td>Mensagem descritiva sobre o resultado da operação</td>
+            </tr>
+            <tr>
+                <td>timestamp</td>
+                <td>string</td>
+                <td>Timestamp da resposta no formato ISO</td>
+            </tr>
+            <tr>
+                <td>data</td>
+                <td>any</td>
+                <td>Dados retornados pela operação, se houver</td>
+            </tr>
+        </table>
+    </section>
+</body>
+</html>
